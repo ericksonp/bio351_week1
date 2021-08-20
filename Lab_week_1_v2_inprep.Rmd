@@ -33,7 +33,6 @@ R can be a calculator: see what happens when you run the code below.
 ```
 
 
-
 You can also "save" particular values in R by assigning them names with the "<-" symbol and then see what those values are by typing the name.
 
 ```{r}
@@ -70,11 +69,6 @@ sqrt(7893)
 log10(y)
 ```
 
-What happens if you perform a mathematical function on a character variable?
-```{r}
-log10(professor)
-```
-Sometimes the error message will clearly tell you what's wrong; other times some Googling is required.
 
 You can also use R to do conditional (true/false) operations using the symbols =, > and <. To test whether two values are equal, you have to use two equal symbols ("=="). When you run this code in the console, R will return TRUE or FALSE for each condition - denoting whether the expressions are indeed true or false. Also note below that some lines of code have a hashtag (#) before them. This tells R that these are annotations; R does not run any lines that begin with #. Annotations are useful to keep track of what you are doing/thinking in your code.
 
@@ -118,13 +112,7 @@ We will look at a global-scale sampling of human diversity . We have filtered do
 
 ### Note about logistics
 
-R can do a lot on its own, but people have written thousands of "libraries" that add additional functions for different purposes. We will use some of functions from the `data.table` and `ggplot2` and  libraries so first let's install them. `data.table` allows us to manipulate data organized in rows and columns.  `ggplot2` is the gold-standard for making beautiful graphs in R.
-
-```{r}
-install.packages(c("data.table", "ggplot2"))
-```
-
-You only need to install the packages once. So, once they are installed on your computer, you can DELETE the code above (highlight it all and delete) so that you don't re-install them if you re-run this worksheet. But, each time you load a new R session, you'll have to load them with the `library()` function to tell the computer you'll be using functions from those packages. Let's load them now.
+R can do a lot on its own, but people have written thousands of "libraries" that add additional functions for different purposes. We will use some of functions from the `data.table` and `ggplot2` and  libraries. `data.table` allows us to manipulate data organized in rows and columns.  `ggplot2` is the gold-standard for making beautiful graphs in R. Let's load them now.
 
 ```{r message=FALSE}
 library(data.table)
@@ -140,7 +128,7 @@ For PCs: the location likely is `C:\users\[YOUR COMPUTER USERNAME]\Documents\BIO
 We will use a function called `fread()` to read in the data table and we will save it as an object called `g`. *You'll need to adjust the text in quotes below to find the location of your file on your computer* The header=TRUE tells R to read the first row of data as the column names.
 
 ```{r}
-g <- fread("/Users/perickso/Documents/BIO351/H938_chr15.geno", header=TRUE)
+g <- fread("H938_chr15.geno", header=TRUE)
 ```
 
 It will be read in as a special object called a data.table in R.
@@ -270,11 +258,11 @@ qplot(p1, p2, data=g)
 Let's look at an initial plot of genotype vs allele frequencies.  First we need to transform our data into a "melted" version, which we will save as a new object called `g.melt`. This is tricky operation, so don't worry too much about what the code says right now. Instead focus on how the data change after running it.
 
 ```{r}
-g.melt<-melt(g, id.vars="p1", measure.vars=c("p11", "p12", "p22"), value.name="frequency", variable.name="genotype")
+g.melt<-melt(g, id.vars=c("SNP", "p1"), measure.vars=c("p11", "p12", "p22"), value.name="frequency", variable.name="genotype")
 g.melt
 ```
 
-**Question:** Look at the `g.melt` object. What did we just do here? The data are the same, but how has the organization changed?
+**Question:** Look at the `g.melt` object. What did we just do here? The data are the same, but how has the organization changed? (hint: you might want to look at how many rows are in `g.melt` relative to `g`)
 
 **Answer here:**
 
@@ -288,17 +276,18 @@ ggplot(g.melt) + geom_point(aes(x = p1,
 
 
 
-**Question:** Do the shapes of the relationships look more linear or parabolic? Can you think of a biological explanation for why?
+**Question:** In your own words, what is this plot showing? What does each point represent? What are the x and y axes? What types of relationships do you see?
 
 **Answer here:**
 
-Under assumptions that there is no mutation, no natural selection, infinite population size, no population substructure and no migration (remember these from Bio 202!?!?), then the genotype frequencies will take on a simple relationship with the allele frequencies. We typically use *p *and *q* (where q=1-p) for the frequencies of allele 1 and 2, and present these *Hardy-Weinberg proportions* as: p^2, 2pq, and q^2. 
+
+Under assumptions that there is no mutation, no natural selection, infinite population size, no population substructure and no migration (remember these from Bio 202!?!?), then the genotype frequencies will take on a simple relationship with the allele frequencies. We typically use *p *and *q* (where q=1-p) for the frequencies of allele 1 and 2, and present these *Hardy-Weinberg proportions* as: *p^2*, *2pq*, and *q^2*. 
 
 **Question** If you look at data and see that it does not conform to Hardy-Weinberg expectations, what does that tell you?
 
 **Answer here** 
 
-Let's add to the plot lines that represent Hardy-Weinberg proportions on top of our data. Don't worry about the code here, just know that you can use R to plot lines too!
+Let's add to the plot lines that represent Hardy-Weinberg proportions on top of our data. Don't worry about the code here, just know that you can use `ggplot` to plot lines too!
 
 ```{r}
 ggplot(g.melt)+
@@ -308,7 +297,7 @@ ggplot(g.melt)+
   stat_function(fun=function(p) (1-p)^2, geom="line", colour="blue",size=2.5)
 ```
 
-**Question** How do the data compare to the Hardy-Weinberg expectations? Are any genotypes over-represented or under-represented?
+**Question** How do the data  visually compare to the Hardy-Weinberg expectations? Are any genotypes over-represented or under-represented?
 
 **Answer here**
 
@@ -384,7 +373,11 @@ ggplot(g)+geom_point(aes(x=expected_hets, y=p12)) + geom_abline(intercept = 0,
 
 ### Discussion: Population subdivision and departures from Hardy-Weinberg expectations
 
-Given the  data are from 52 sub-populations from around the globe, and alleles have some some probability of clustering within populations, a good working hypothesis for the deficiency of heterozygotes in this dataset is the presence of some population structure. *In other words, there may be some form of non-random mating such that A1A1 individuals are more likely to reproduce together, and A2A2 individuals are also more likely to reproduce together, resulting in fewer A1A2 individuals than expected by chance. *
+Given the  data are from 52 sub-populations from around the globe, and alleles have some some probability of clustering within populations, a good working hypothesis for the deficiency of heterozygotes in this dataset is the presence of some population structure. *In other words, there may be some form of non-random mating* 
+
+**Question:** Explain how nonrandom mating could produce the results we are seeing (what genotypes are mating together more often than expected by chance?
+
+**Answer here**
 
 
 ### Finding specific loci that are large departures from Hardy-Weinberg
@@ -427,10 +420,12 @@ The SNP you identified is near the gene SLC24A5.
 
 **Answer here**
 
+**Question** You've spent this lab identifying one of the most highly genetically differentiated regions of the human genome and learned a bit about its biological function. What does that tell you about overall genetic difference between human populations? 
 
-### Discussion: The outlier reigon
+**Answer here**
 
-The region you've found is one of the most differentiated between human populations that is known.  Notice in your literature search, how it is known to affect skin pigmentation and is thought to contribute to differences in skin pigmentation that are seen between human populations.  Finding strong genetic differentiation for alleles that affect external morphological phenotypes is not uncommon when looking at other chromosomes. Some of the most differentiated genes that exist in humans are those that involve morphological phenotypes - such as skin pigmentation, hair color/thickness, and eye color   Many of these are thought to have arisen due to direct or indirect effects of adaptation to local selective pressures (e.g. adaptation to varing levels of UV exposure, local pathogens, local diets, local mating preferences), though in most cases we still do not yet have a fully convincing understanding of their evolutionary histories.  Regardless of the reasons, it is notable that many of the features that humans see externally in each other (i.e. the morphological differences) are controlled by genes that are outliers in the genome.  *Put another way, a genomic perspective shows us many of the differences people see in each other are in a sense, just skin-deep.* 
+
+*When you reach this point in the document, please chat with Dr. Erickson about your conclusions, especially for the last two questions, before leaving lab for the day.**
 
 ### References
 
