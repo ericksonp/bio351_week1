@@ -121,6 +121,8 @@ R can do a lot on its own, but people have written thousands of "libraries" that
 ```{r message=FALSE}
 library(data.table)
 library(ggplot2)
+library(rmarkdown)
+library(tinytex)
 ```
 
 ### Initial view of the data
@@ -235,7 +237,7 @@ g[, p11 := nA1A1/nObs]
 
 ```
 
-# Compute allele frequencies from genotype frequencies
+### Compute allele frequencies from genotype frequencies
 
 We have genotype frequencies and now we need to calculate the *allele frequencies* of the A1 and A2 alleles. The allele frequency is how common each allele is in the population. The equations are given below.
 
@@ -254,11 +256,11 @@ And let's plot the frequency of the major allele (A2) vs the frequency of the mi
 qplot(p1, p2, data=g)
 ```
 
-**Question:**  Describe this graph. What do p1 and p2 always need to add up to and why?
+**Question:**  Describe this graph. What is the sum of any given x+y and why?
 
 **Answer here:**
 
-### Plotting genotype on allele frequencies
+### Plotting genotype as a function of allele frequencies
 
 Let's look at an initial plot of genotype vs allele frequencies.  First we need to transform our data into a "melted" version, which we will save as a new object called `g.melt`. This is tricky operation, so don't worry too much about what the code says right now. Instead focus on how the data change after running it.
 
@@ -286,7 +288,7 @@ ggplot(g.melt) + geom_point(aes(x = p1,
 **Answer here:**
 
 
-Under assumptions that there is no mutation, no natural selection, infinite population size, no population substructure and no migration (remember these from Bio 202!?!?), then the genotype frequencies will take on a simple relationship with the allele frequencies. We typically use *p *and *q* (where q=1-p) for the frequencies of allele 1 and 2, and present these *Hardy-Weinberg proportions* as: *p^2*, *2pq*, and *q^2*. 
+Under assumptions that there is no mutation, no natural selection, infinite population size, random mating and no migration (remember these from Bio 202!?!?), then the genotype frequencies will take on a simple relationship with the allele frequencies. We typically use *p *and *q* (where q=1-p) for the frequencies of allele 1 and 2, and present these *Hardy-Weinberg proportions* as: *p^2*, *2pq*, and *q^2*. 
 
 **Question** If you look at data and see that it does not conform to Hardy-Weinberg expectations, what does that tell you?
 
@@ -306,10 +308,12 @@ ggplot(g.melt)+
 
 **Answer here**
 
+***Please stop here and discuss your answer above with the instructor before moving on***
+
 
 ### Testing Hardy Weinberg
 
-Now let's Pearson's Chi-square-test (remember Pearson from this morning? He was not the greatest guy but developed a number of statistical tests that we will be using this semester). Chi-squared is a basic statistical test that can be used to see if count data conform to a particular expectation.  It is based on the Chi-squared-test statistic, which is equal to *[(observed-expected)^2]/expected]*, summed across all categories of data. 
+Now let's use Pearson's Chi-square-test (remember Pearson from this morning? He was not the greatest guy but developed a number of statistical tests that we will be using this semester). Chi-squared is a basic statistical test that can be used to see if count data conform to a particular expectation.  It is based on the Chi-squared-test statistic, which is equal to *[(observed-expected)^2]/expected]*, summed across all categories of data. 
 
 Lots of mathematical theory shows that this statistic follows an expected distribution, and so if it is very big or very small relative the expected distribution, we can say that our data deviate from the expectation.
 
@@ -321,6 +325,7 @@ g[,X2 := (nA1A1-nObs*p1^2)^2 /(nObs*p1^2) +
             (nA2A2-nObs*p2^2)^2 / (nObs*p2^2)]
 g[,pval := 1-pchisq(X2,1)]
 ```
+
 **Question:** Why did we have to add together three lines to calculate our chi-squared statistic in the first piece of code?
 
 **Answer here:**
@@ -352,7 +357,7 @@ First, let's see how many tests have p-values less than 0.05.
 #how many rows are there?
 
 
-#what fraction of the total # of SNPs is this (use R's calculator to find this number)
+#what fraction of the total # of SNPs is this?
 
 
 ```
@@ -378,16 +383,16 @@ ggplot(g)+geom_point(aes(x=expected_hets, y=p12)) + geom_abline(intercept = 0,
 
 ### Discussion: Population subdivision and departures from Hardy-Weinberg expectations
 
-Given the  data are from 52 sub-populations from around the globe, and alleles have some some probability of clustering within populations, a good working hypothesis for the deficiency of heterozygotes in this dataset is the presence of some population structure. *In other words, there may be some form of non-random mating* 
+Given the  data are from 52 sub-populations from around the globe, and alleles have some some probability of clustering within populations, a good working hypothesis for the deficiency of heterozygotes in this dataset is the presence of some population structure. *In other words, some genotypes may be more common in some sub-populations of humans, and other genotypes might be more common in another population*
 
-**Question:** Explain how nonrandom mating could produce the results we are seeing (what genotypes are mating together more often than expected by chance?
+**Question:** Explain a reason why you might see different genotypes at different frequencies within different human populations
 
 **Answer here**
 
 
 ### Finding specific loci that are large departures from Hardy-Weinberg
 
-Now, let's ask if we can find any loci that are wild departures from HW proportions.  These might be loci that cluster geographically in dramatic ways (such that they have few heterozygotes relative to expectations). no find these loci, we'll compute a number called *F*, which is the relative deficiency of heterozygotes [or (expected hets-observed hets)/expected hets)]
+Now, let's ask if we can find any loci that are wild departures from HW proportions.  These might be loci that cluster geographically in dramatic ways (such that they have few heterozygotes relative to expectations). To find these loci, we'll compute a number called *F*, which is the relative deficiency of heterozygotes [or *(expected hets-observed hets)/expected hets)*]
 
 
 ```{r}
@@ -406,7 +411,7 @@ plot(g$F, xlab = "SNP number")
 
 There are a few interesting SNPS that show either a very high or low *F* value. 
 
-Let's extract the SNP id for the largest value by using the `order()` function to sort g by the value of F (will sort from lowest to highest) and using `tail()` to look at the last 5 rows
+Let's extract the SNP id for the largest value by using the `order()` function to sort g by the value of F (will sort from lowest to highest) and using `tail()` to look at the last 5 rows of the data table.
 ```{r}
 tail(g[order(F)])
 ```
